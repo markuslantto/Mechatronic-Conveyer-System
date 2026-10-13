@@ -19,20 +19,20 @@ The physical structure and moving parts were designed from scratch in Creo and s
 
 ## Electronics & Power Architecture
 The system is controlled by an Arduino Uno, driving multiple actuators and interactive elements:
-*   **Actuation:** A DC motor controlled via a Cytron driver using PWM signals powers the conveyor belt, while a servo motor actuates a hidden "panic button" mechanism. 
+*   **Actuation:** A DC motor controlled via a Cytron driver using PWM signals powers the conveyor belt, while a servo motor pops out a hidden panic button. 
 *   **Power Management:** To ensure system stability and eliminate electrical noise from the motors, the logic board and the high-current actuators are powered by two completely isolated power sources.
 *   **Audio-Visual Feedback:** Integrated an RGB LED strip and a DFPlayer Mini MP3 module to provide dynamic, real-time feedback based on the factory's operational state, dictated by the users input choice. 
 
 ## Software Architecture
 The embedded C++ code is designed for robust, continuous operation without freezing or missing user inputs:
 *   **State Machine Design:** The main loop utilizes a finite state machine to safely transition between different interactive scenarios (such as, normal production, strike, panic mode).
-*   **Non-Blocking Execution:** Replaced all standard delay functions with millis-based timers, to ensure the microcontroller remains fully responsive to user input picked up by the sensors, while concurrently managing the sound and light outputs.
-*   **Hardware Debouncing:** Implemented a software-based debounce filter to eliminate high-frequency noise from the physical buttons, ensuring flawless state transitions.
+*   **Non-Interrupting Execution:** Replaced all standard delay functions with millis-based timers, to ensure the microcontroller remains fully responsive to user input picked up by the sensors, while concurrently managing the sound and light outputs.
+*   **Hardware Debouncing:** Implemented a debounce filter to eliminate high-frequency noise from the physical buttons, providing flawless state transitions by ensuring someone is really pressing the button. 
 
 ## Results & Demo
 The final system performed as expected during the live demonstration, successfully handling concurrent tasks (motor control, audio, lighting, and sensor input) without any logical blocking or power drops. 
 
-![Full video demonstration here](https://drive.google.com/file/d/1YMHVF0lZewXSyK2voq_vUxEnQRn3MMQe/view?usp=sharing)
+[Demo video from an early stage of the project](https://drive.google.com/file/d/1YMHVF0lZewXSyK2voq_vUxEnQRn3MMQe/view?usp=sharing)
 
 
 
