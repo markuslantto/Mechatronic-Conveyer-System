@@ -8,7 +8,7 @@ The physical structure and moving parts were designed from scratch in Creo and s
 
 | Fresh from the printer | Put together |
 | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/5576fd5c-7b1c-40ad-8484-19fa9ae6bd10" length="200" width="300"> | <img src="https://github.com/user-attachments/assets/2a97e071-684f-4276-bd87-427a49610178" width="300"> |
+| <img src="https://github.com/user-attachments/assets/5576fd5c-7b1c-40ad-8484-19fa9ae6bd10" height="200" width="300"> | <img src="https://github.com/user-attachments/assets/2a97e071-684f-4276-bd87-427a49610178" height="200" width="300"> |
 
 *   **Transmission & Amplifier:** Engineered custom cogs, a secure motor mount, and a conical amplifier housing unit to amplify the output of the audio player.
 *   **Structural Housing:** Built a dual-level cuboid chassis, cleanly separating the user-visible factory layer from the underlying electronic control area.
