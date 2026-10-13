@@ -1,0 +1,269 @@
+#include "CytronMotorDriver.h"
+#include "DFRobotDFPlayerMini.h"
+#include "SoftwareSerial.h"
+#include <Servo.h>
+#include <FastLED.h>
+
+// PIN KONSTANTER
+const int MOTOR_DIRECTION_PIN = 4;
+const int MOTOR_POWER_PIN     = 3;
+const int BUTTON_LIGHT_PIN    = 8;
+const int BUTTON_PIN          = 9;
+const int STRIP_PIN = 6;
+const int SERVO_PIN           = 5;
+const int DFPLAYER_RX_PIN     = 10;
+const int DFPLAYER_TX_PIN     = 11;
+int RedLed              = 50;
+
+// OBJEKT
+
+// Motorstyrning
+CytronMD motor(PWM_DIR, MOTOR_POWER_PIN, MOTOR_DIRECTION_PIN);  // PWM = Pin 3, DIR = Pin 2.
+
+// DFPlayer (mp3-spelaren)
+DFRobotDFPlayerMini MP3player;
+SoftwareSerial DFP_Serial(DFPLAYER_RX_PIN, DFPLAYER_TX_PIN);
+
+// Servo (för gröna knappen)
+Servo myservo; // Skapar ett servo-objekt
+int pos = 0;   // Start-positionen för servo
+
+// Knappar
+bool buttonState       = HIGH;
+int  buttonPressCount  = 4;
+bool lastButtonState   = HIGH;
+bool lastButtonReading = HIGH;
+
+unsigned long lastDebounceTime     = 0;
+const unsigned long debounceDelay  = 50;
+
+// BLINKANDE LAMPOR (MILLIS)
+#define NUM_LEDS 4
+CRGB leds[NUM_LEDS];
+bool ledState                  = LOW;
+unsigned long lastBlinkTime    = 0; // Sparar den senaste blinktiden
+const unsigned long blinkInterval1 = 500; // tid mellan varje blinkning
+const unsigned long blinkInterval2 = 50; // tid mellan varje blinkning
+unsigned long interval = 0;
+uint8_t currentColorIndex = 0; //färgcykling
+CRGB colors[3] = { CRGB::Red, CRGB::Green, CRGB::Blue };
+
+
+
+
+// Funktioner
+void handleButtonPress();
+void updateOutputs(unsigned long currentMillis);
+
+/*void setMotorSpeed(int speed) {
+    motor.setSpeed(speed);
+}
+*/
+// SETUP
+void setup() {
+    Serial.begin(9600);
+    Serial.println("Då rullar vi!");
+
+
+    FastLED.addLeds<WS2812B, STRIP_PIN, GRB>(leds, NUM_LEDS); //led strip
+    FastLED.clear();
+    FastLED.setBrightness(50); // 0 - 255
+    DFP_Serial.begin(9600); // Startar mp3-spelaren
+    MP3player.begin(DFP_Serial);
+    MP3player.volume(20); // Sätter volymen till max
+
+    pinMode(BUTTON_PIN, INPUT_PULLUP); // Sätter button pin som input
+    myservo.attach(SERVO_PIN);         // Fäster servon till servo pin
+    pinMode(BUTTON_LIGHT_PIN, OUTPUT);
+    digitalWrite(BUTTON_LIGHT_PIN,HIGH);
+
+}
+
+// LOOP
+void loop() {
+    unsigned long currentMillis = millis(); // Plockar ut vad tiden är nu
+    
+    int reading = digitalRead(BUTTON_PIN); // Läser switch-status till en lokal variabel
+
+    // kollar ifall man precis tryckt på knappen
+    if (reading != lastButtonReading) { // kollar ifall switch-status har ändrats
+        lastDebounceTime = currentMillis; // nollställer debounce-timern
+    }
+
+    if ((currentMillis - lastDebounceTime) > debounceDelay) {
+        // kollar ifall knappen verkligen är itryckt
+        if (reading != buttonState) {
+            buttonState = reading;
+
+            // om knappen precis tryckts ned (LOW som aktiv)
+            if (buttonState == LOW) {
+                buttonPressCount++; // ökar antalet FAKTISKA tryck
+                handleButtonPress();
+            }
+        }
+    }
+
+    lastButtonReading = reading;
+
+    updateOutputs(currentMillis);
+}
+
+// Här börjar funktionerna UTANFÖR loop()
+void handleButtonPress() {
+    int prevscenario = 7; 
+    int scenario = 0; //tempkod
+
+   /* 
+            */
+    switch(scenario){
+    case 0:
+     switch (buttonPressCount) {
+        case 0: 
+            break;
+
+        case 1: // Motor på 50%, konstant ljus, ljudfil 1
+
+            motor.setSpeed(64);
+            digitalWrite(BUTTON_LIGHT_PIN, LOW);
+            MP3player.play(1);
+            Serial.println("Första knapptryck");
+            delay(12000); // delay på 12s
+            motor.setSpeed(0);
+            delay(12000); 
+            digitalWrite(BUTTON_LIGHT_PIN,HIGH);
+            break;
+
+        case 2: // Motor 100%, ljus blinkar, ljudfil 2
+            Serial.println("Andra knapptryck");
+            digitalWrite(BUTTON_LIGHT_PIN, LOW);
+            MP3player.play(2);
+            motor.setSpeed(128);
+            lastBlinkTime = millis();
+            ledState = LOW;
+            delay(12000); // delay på 12s
+            digitalWrite(BUTTON_LIGHT_PIN,HIGH);
+            motor.setSpeed(0);
+
+            break;
+
+        case 3: // Motorn stannar, lampan blinkar ännu mer, ljudfil dödas
+            Serial.println("Tredje knapptryck");
+            digitalWrite(BUTTON_LIGHT_PIN, LOW);
+            MP3player.play(3);            
+            motor.setSpeed(-75);
+            lastBlinkTime = millis();
+            ledState = LOW;
+            delay(12000); // delay på 12s
+            digitalWrite(BUTTON_LIGHT_PIN,HIGH);
+            motor.setSpeed(0);
+            break;
+
+        case 4: // bllabla
+            Serial.println("Fjärde knapptryck");
+            digitalWrite(BUTTON_LIGHT_PIN, LOW);
+            MP3player.play(4);            
+            motor.setSpeed(0);
+            delay(9000);
+            digitalWrite(BUTTON_LIGHT_PIN,HIGH);
+            showPanicButton();
+            
+            break;
+
+        case 5: // Reset case
+            Serial.println("Femte knapptryck, spelet resetas");
+            digitalWrite(BUTTON_LIGHT_PIN, LOW);
+            hidePanicButton();
+            MP3player.play(5);
+            motor.setSpeed(100);
+            buttonPressCount = 0;
+            delay(12000); // delay på 12s
+            digitalWrite(BUTTON_LIGHT_PIN,HIGH);
+            motor.setSpeed(0);
+            while (true) {
+        int scenario=random(4);
+        prevscenario = 1; //här med
+        if (scenario != prevscenario)  {
+            prevscenario = scenario;
+             }
+             Serial.println(scenario);
+            break;
+
+    } 
+    }
+   case 1:
+    break;
+   case 2:
+    break;
+   case 3:
+    break;    
+    
+    }
+    }
+// Gröna knappen funktion
+void showPanicButton () {
+  for (pos = 0; pos <= 90; pos += 1) { // goes from 0 degrees to 90 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15 ms for the servo to reach the position
+  }   
+  } 
+void hidePanicButton () {
+  for (pos = 90; pos >= 0; pos -= 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15 ms for the servo to reach the position
+  }  
+  }  
+
+
+// LAMPOR IN ACTION
+// IDLE: AV, SCEN1: konstant på, SCEN2: blinkar
+void updateOutputs(unsigned long currentMillis) {
+    if (buttonPressCount == 0) { //allt släckt!
+        fill_solid(leds, NUM_LEDS, CRGB::Black);
+        FastLED.show();
+        
+        return;
+    }
+
+    if (buttonPressCount == 1) { //vitt ljus
+        fill_solid(leds, NUM_LEDS, CRGB::White);
+        FastLED.show();
+        return;
+    }
+    if (buttonPressCount == 4) {
+          
+            for (int i = 0; i < NUM_LEDS && RedLed>0; i++ && RedLed--) {
+                FastLED.clear();
+                leds[i]= CRGB::Red;
+                FastLED.show();
+                delay(100);
+                }
+                return;
+                }
+                }
+/*
+    if (buttonPressCount == 2) {
+        interval = blinkInterval1; // långsammare
+    } else if (buttonPressCount == 3) {
+        interval = blinkInterval2; // snabbare
+    } else {
+        return;
+    }
+
+    if (currentMillis - lastBlinkTime >= interval) {
+        lastBlinkTime = currentMillis;
+        ledState = !ledState;
+
+        if (ledState) {
+            // varje gång vi "tänder" → byt färg (R → G → B → R…)
+            currentColorIndex = (currentColorIndex + 1) % 3;
+            fill_solid(leds, NUM_LEDS, colors[currentColorIndex]);
+        } else {
+            // "släckt" mellan blinkarna
+            fill_solid(leds, NUM_LEDS, CRGB::Black);
+        }
+
+        FastLED.show();
+    }
+    */
