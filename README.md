@@ -1,6 +1,6 @@
 # Interactive Mechatronic Conveyor System 
 
-A project for a rapid prototyping course at LTH focused on integrating mechanical components, sensors, and software structure to create a fully functional, thematic and interactive experience (my group's theme being: You are the boss of a Shark Factory producing Shrimp Chips). The project involved the complete mechatronic product development cycle from CAD modeling to final electronic assembly within a strict timeframe.
+A project for a rapid prototyping course at LTH focused on integrating mechanical components, sensors, and software structure to create a fully functional, thematic and interactive experience (my group's theme being: You are the boss of a Shark Factory producing Shrimp Chips). The project involved the complete mechatronic product development cycle from CAD modeling to final electronic assembly, all within a strict timeframe.
 
 ## Mechanical Design & Manufacturing
 The physical structure and moving parts were designed from scratch in Creo and subsequently 3D-printed:
